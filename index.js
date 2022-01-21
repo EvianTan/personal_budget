@@ -5,6 +5,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.json())
+app.use(express.urlencoded({extended: false}));
 
 // initial envelopes
 const envelopes = [
@@ -68,10 +69,20 @@ app.get('/', (req, res) => {
   res.send('Hello World!')
 });
 
+// generate an envelope
+app.post('/envelopes', (req, res, next) => {
+    console.log(req.body);
+    const envelope = req.body;
+    envelopes.push(envelope);
+    res.status(201).send("Create Envelope");
+})
+
+// retrieve all envelopes
 app.get('/envelopes', (req, res, next) => {
     res.send(envelopes);
 })
 
+// retrieve a specific envelope
 app.get('/envelopes/:id', (req, res, next) => {
     // object’s keys are any parameter names in the route
     // each key’s value is the actual value of that field per request
@@ -84,18 +95,23 @@ app.get('/envelopes/:id', (req, res, next) => {
       }
 })
 
-app.post('/envelopes', (req, res, next) => {
-    console.log(req.body);
-    const receivedEnvelope = req.body;
-    if (receivedEnvelope){
-        envelopes.push(receivedEnvelope);
-        res.status(201).send(receivedEnvelope);
-    } else {
-        res.status(400).send();
-    }
+// update a specific envelope
+app.put('/envelope/:id', (req, res, next) => {
+    console.log(req.params.id);
+    const id = req.params.id;
+    const body = req.body;
+    const updatedEnvelope = {...body};
+    envelopes[id] = updatedEnvelope;
+    res.send(updatedEnvelope)
 
+    /**
+    envelopes[id]["url"] = req.body.url;
+    envelopes[id]["info"] = req.body.info;
+    envelopes[id]["amount"] = req.body.amount;
+
+    res.send(envelopes[id]);
+    **/
 })
-
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`)
