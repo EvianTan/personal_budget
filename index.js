@@ -1,116 +1,99 @@
 const express = require('express');
+const envelopes = require('./envelopes')
+
 const req = require('express/lib/request');
 const res = require('express/lib/response');
 const app = express();
 const port = 3000;
 
+// for output object on console
+// instead, will be {} empty
 app.use(express.json())
-app.use(express.urlencoded({extended: false}));
-
-// initial envelopes
-const envelopes = [
-    {
-        "id": 0,
-        "url": "/total",
-        "info": "envelope for total budget",
-        "amount": 5000
-    },
-    {
-        "id": 1,
-        "url": "/groceries",
-        "info": "envelope for groceries budget",
-        "amount": 500
-    },
-    {
-        "id": 2,
-        "url": "/gas",
-        "info": "envelope for gas budget",
-        "amount": 500
-    },
-    {
-        "id": 3,
-        "url": "/health",
-        "info": "envelope for health budget",
-        "amount": 500
-    },
-    {
-        "id": 4,
-        "url": "/clothing",
-        "info": "envelope for clothing budget",
-        "amount": 500
-    },
-    {
-        "id": 5,
-        "url": "/dining_out",
-        "info": "envelope for dining_out budget",
-        "amount": 500
-    },
-    {
-        "id": 6,
-        "url": "/household_items",
-        "info": "envelope for household_items budget",
-        "amount": 500
-    },
-    {
-        "id": 7,
-        "url": "/pet_care",
-        "info": "envelope for pet_care budget",
-        "amount": 500
-    },
-    {
-        "id": 8,
-        "url": "/irregular_expense",
-        "info": "envelope for irregular_expense budget",
-        "amount": 500
-    },
-]
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+    res.send('API is working...');
 });
 
-// generate an envelope
-app.post('/envelopes', (req, res, next) => {
-    console.log(req.body);
-    const envelope = req.body;
-    envelopes.push(envelope);
-    res.status(201).send("Create Envelope");
+// retrieve all envelopes
+app.get('/envelopes', (req, res) => {
+    res.json(envelopes);
 })
 
-// retrieve all envelopes
-app.get('/envelopes', (req, res, next) => {
-    res.send(envelopes);
+// generate an envelope
+app.post('/envelopes', (req, res) => {
+    if (!req.body.category) {
+        res.status(400);
+        res.send("Category is required...")
+    }
+
+    const envelope = {
+        id: envelopes.length+1,
+        category: req.body.category,
+        info: req.body.info,
+        amount: req.body.amount
+    }
+
+    envelopes.push(envelope);
+    res.json(envelope);
 })
+
 
 // retrieve a specific envelope
-app.get('/envelopes/:id', (req, res, next) => {
-    // object’s keys are any parameter names in the route
-    // each key’s value is the actual value of that field per request
-    console.log(req.params);
-    const envelopeInvertory = envelopes[req.params.id];
-    if (envelopeInvertory) {
-        res.send(envelopeInvertory);
-      } else {
-        res.status(404).send('Envelope not found');
-      }
+app.get('/envelopes/:id', (req, res) => {
+   const id = req.params.id;
+   const index = envelopes.findIndex((envelope) => {
+       return envelope.id == Number.parseInt(id);
+    })
+    
+    if (index >= 0) {
+        const env = envelopes[index];
+        res.json(env)
+    } else {
+        res.status(404);
+    }
 })
 
 // update a specific envelope
-app.put('/envelope/:id', (req, res, next) => {
-    console.log(req.params.id);
+app.put('/envelopes/:id', (req, res) => {
+    // here id is the input one in path
     const id = req.params.id;
-    const body = req.body;
-    const updatedEnvelope = {...body};
-    envelopes[id] = updatedEnvelope;
-    res.send(updatedEnvelope)
+    console.log(id)
+    const category = req.body.category;
+    const info = req.body.info;
+    const amount = req.body.amount;
 
-    /**
-    envelopes[id]["url"] = req.body.url;
-    envelopes[id]["info"] = req.body.info;
-    envelopes[id]["amount"] = req.body.amount;
+    const index = envelopes.findIndex((envelope) => {
+        return envelope.id == Number.parseInt(id);
+    })
 
-    res.send(envelopes[id]);
-    **/
+    console.log(index, id)
+
+    if (index >= 0) {
+        // id-1 for the 0-based envelope array
+        const env = envelopes[index];
+        env.category = category;
+        env.info = info;
+        env.amount = amount;
+        res.json(env);
+    } else {
+        res.status(404).send("You cannot update non-existing envelope...");
+        res.end();
+    }
+})
+
+app.delete('/envelopes/:id', (req, res) => {
+    const id = req.params.id;
+    const index = envelopes.findIndex((envelope) => {
+        return envelope.id == Number.parseInt(id);
+    })
+
+    if (index >= 0) {
+        const env = envelopes[index];
+        envelopes.splice(index,1);
+        res.json(env)
+    } else {
+        res.status(404);
+    }
 })
 
 app.listen(port, () => {
