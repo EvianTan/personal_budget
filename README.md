@@ -7,7 +7,7 @@ To run locally, run `node index.js`
 
 Once the app is running locally, you can access the API at `http://localhost:3000/`
 
-## Testing with Swagger
+## Testing
  - Retrieve envelopes using `GET http://localhost:3000/envelopes`
  - Retrieve a single envelope using `GET http://localhost:3000/envelopes/{id}`
  - Create an envelope using `POST http://localhost:3000/envelopes`
